@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TICKR</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0f0f;--bg2:#1a1a1a;--bg3:#242424;--bg4:#2e2e2e;
+  --border:#333;--border2:#444;
+  --text:#e8e8e8;--text2:#999;--text3:#666;
+  --p1:#e24b4a;--p2:#ef9f27;--p3:#378add;--p4:#639922;
+  --accent:#378add;--radius:6px;--font:'Courier New',monospace
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;min-height:100vh}
+
+/* AUTH SCREEN */
+#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.auth-box{background:var(--bg2);border:0.5px solid var(--border);border-radius:10px;padding:40px;width:320px;text-align:center}
+.auth-logo{font-size:22px;font-weight:500;margin-bottom:8px;letter-spacing:-0.5px}
+.auth-logo span{color:var(--p3)}
+.auth-box p{color:var(--text2);font-size:12px;margin-bottom:24px}
+.auth-box input{width:100%;padding:10px 12px;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:13px;margin-bottom:10px;text-align:center;letter-spacing:2px}
+.auth-box input:focus{outline:none;border-color:var(--accent)}
+.auth-box button{width:100%;padding:10px;background:transparent;border:0.5px solid var(--accent);border-radius:var(--radius);color:var(--accent);font-family:var(--font);font-size:13px;cursor:pointer}
+.auth-box button:hover{background:rgba(55,138,221,0.1)}
+.auth-error{color:var(--p1);font-size:11px;margin-top:8px;min-height:16px}
+
+/* MAIN APP */
+#app{display:none;padding:16px;max-width:1200px;margin:0 auto}
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.logo{font-size:15px;font-weight:500;letter-spacing:-0.5px;padding-right:12px;border-right:0.5px solid var(--border)}
+.logo span{color:var(--p3)}
+.tabs{display:flex;gap:4px;margin-left:auto}
+.tab{padding:5px 14px;border:0.5px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:12px;font-family:var(--font);background:transparent;color:var(--text2)}
+.tab.active{background:var(--bg3);color:var(--text);border-color:var(--border2)}
+.btn-new{padding:5px 14px;border:0.5px solid var(--p3);border-radius:var(--radius);cursor:pointer;font-size:12px;font-family:var(--font);background:transparent;color:var(--p3)}
+.btn-new:hover{background:rgba(55,138,221,0.1)}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--bg2);border-radius:var(--radius);padding:10px 12px;border:0.5px solid var(--border)}
+.stat-label{font-size:10px;color:var(--text3);margin-bottom:3px;letter-spacing:0.4px}
+.stat-val{font-size:20px;font-weight:500}
+.p1c{color:var(--p1)}.p2c{color:var(--p2)}.p3c{color:var(--p3)}.p4c{color:var(--p4)}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:500;letter-spacing:0.3px}
+.pill-p1{background:#501313;color:#f09595}.pill-p2{background:#412402;color:#fac775}
+.pill-p3{background:#042c53;color:#85b7eb}.pill-p4{background:#173404;color:#97c459}
+.pill-open{background:var(--bg3);color:var(--text2);border:0.5px solid var(--border)}
+.pill-progress{background:#412402;color:#fac775}
+.pill-resolved{background:#173404;color:#97c459}
+.pill-archived{background:#1a1a1a;color:#666}
+.tag-pill{background:var(--bg3);border:0.5px solid var(--border);color:var(--text2);padding:2px 6px;border-radius:3px;font-size:10px}
+
+/* FILTERS */
+.filters{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.filters select{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:11px;padding:4px 8px;cursor:pointer}
+.filter-label{font-size:11px;color:var(--text3)}
+.arch-toggle{font-size:11px;color:var(--p3);cursor:pointer;background:none;border:none;font-family:var(--font);padding:0}
+
+/* LIST VIEW */
+.list-header{display:grid;grid-template-columns:75px 1fr 65px 90px 80px 60px 80px 36px;gap:6px;padding:6px 10px;border-bottom:0.5px solid var(--border);font-size:10px;color:var(--text3);letter-spacing:0.4px}
+.list-row{display:grid;grid-template-columns:75px 1fr 65px 90px 80px 60px 80px 36px;gap:6px;padding:8px 10px;border-bottom:0.5px solid var(--border);align-items:center;cursor:pointer}
+.list-row:hover{background:var(--bg2)}
+.list-row.archived-row{opacity:0.45}
+.ticket-id{font-size:10px;color:var(--text3)}
+.ticket-title{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ticket-tags{display:flex;gap:3px;flex-wrap:wrap}
+.row-action{display:flex;gap:4px;justify-content:flex-end}
+.icon-btn{width:24px;height:24px;border:none;background:transparent;cursor:pointer;color:var(--text3);font-size:14px;display:flex;align-items:center;justify-content:center;border-radius:4px}
+.icon-btn:hover{background:var(--bg3);color:var(--text)}
+
+/* KANBAN */
+.kanban{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:start}
+.col-header{font-size:11px;font-weight:500;letter-spacing:0.5px;padding:0 0 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);margin-bottom:8px}
+.col-count{background:var(--bg3);border-radius:10px;padding:1px 7px;font-size:10px}
+.k-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:10px;margin-bottom:8px;cursor:pointer}
+.k-card:hover{border-color:var(--border2)}
+.k-card-id{font-size:10px;color:var(--text3);margin-bottom:4px}
+.k-card-title{font-size:13px;margin-bottom:8px;line-height:1.4}
+.k-card-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+
+/* MODAL OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:100;overflow-y:auto}
+.modal{background:var(--bg2);border:0.5px solid var(--border2);border-radius:10px;width:100%;max-width:560px;padding:22px}
+.modal-title{font-size:14px;font-weight:500;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;color:var(--text)}
+.field-group{margin-bottom:12px}
+.field-label{font-size:10px;color:var(--text3);margin-bottom:4px;letter-spacing:0.4px}
+input,select,textarea{width:100%;background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:12px;padding:8px 10px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+textarea{resize:vertical;min-height:70px}
+select option{background:var(--bg3)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;border-top:0.5px solid var(--border);padding-top:12px}
+.btn-pri{padding:6px 18px;border:0.5px solid var(--p3);border-radius:var(--radius);cursor:pointer;font-size:12px;font-family:var(--font);background:rgba(55,138,221,0.1);color:var(--p3)}
+.btn-sec{padding:6px 14px;border:0.5px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:12px;font-family:var(--font);background:transparent;color:var(--text2)}
+.btn-danger{padding:6px 14px;border:0.5px solid var(--p1);border-radius:var(--radius);cursor:pointer;font-size:12px;font-family:var(--font);background:transparent;color:var(--p1)}
+.detail-section{margin-bottom:14px;padding-bottom:14px;border-bottom:0.5px solid var(--border)}
+.detail-row{display:grid;grid-template-columns:110px 1fr;gap:8px;margin-bottom:6px;font-size:12px}
+.detail-key{color:var(--text3)}
+.comment-item{background:var(--bg3);border-radius:var(--radius);padding:8px 10px;margin-bottom:6px;font-size:12px;line-height:1.5;border:0.5px solid var(--border)}
+.comment-ts{font-size:10px;color:var(--text3);margin-top:4px}
+.empty-col{font-size:11px;color:var(--text3);padding:12px 0;text-align:center}
+
+/* LOADING / TOAST */
+.loading{text-align:center;padding:60px;color:var(--text3);font-size:12px}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius);padding:10px 16px;font-size:12px;z-index:200;opacity:0;transition:opacity 0.2s}
+.toast.show{opacity:1}
+.toast.error{border-color:var(--p1);color:var(--p1)}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo"><span>[</span>TICKR<span>]</span></div>
+    <p>Personal IT ticket tracker</p>
+    <input type="password" id="pw-input" placeholder="enter password" onkeydown="if(event.key==='Enter')tryAuth()">
+    <button onclick="tryAuth()">SIGN IN</button>
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STATUSES = ['Open','In Progress','Resolved','Archived'];
+const PRIORITIES = ['P1','P2','P3','P4'];
+const DEFAULT_TAGS = ['bug','feature','chore','personal','work','health','finance','learning'];
+
+let apiSecret = sessionStorage.getItem('tickr_secret') || '';
+let tickets = [];
+let view = 'list';
+let filterStatus = '';
+let filterPriority = '';
+let filterTag = '';
+let showArchived = false;
+let modal = null;
+let editTicket = null;
+let detailTicket = null;
+let nextId = 1;
+
+// --- AUTH ---
+async function tryAuth() {
+  const pw = document.getElementById('pw-input').value.trim();
+  if (!pw) return;
+  const res = await fetch('/api/tickets', { headers: { 'x-api-secret': pw } });
+  if (res.status === 401) {
+    document.getElementById('auth-error').textContent = 'incorrect password';
+    return;
+  }
+  apiSecret = pw;
+  sessionStorage.setItem('tickr_secret', pw);
+  const data = await res.json();
+  tickets = data;
+  computeNextId();
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  render();
+}
+
+// Auto-login if secret is already in sessionStorage
+if (apiSecret) {
+  fetch('/api/tickets', { headers: { 'x-api-secret': apiSecret } })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (data) {
+        tickets = data;
+        computeNextId();
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        render();
+      } else {
+        sessionStorage.removeItem('tickr_secret');
+        apiSecret = '';
+      }
+    });
+}
+
+function computeNextId() {
+  const nums = tickets.map(t => parseInt((t.ticketId||'TKT-0000').split('-')[1]||0));
+  nextId = nums.length ? Math.max(...nums) + 1 : 1;
+}
+
+function newTicketId() {
+  return `TKT-${String(nextId++).padStart(4,'0')}`;
+}
+
+// --- API CALLS ---
+async function apiFetch(path, method='GET', body=null) {
+  const opts = { method, headers: { 'x-api-secret': apiSecret, 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(path, opts);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+function toast(msg, err=false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (err?' error':'');
+  setTimeout(() => el.className='toast', 2200);
+}
+
+// --- HELPERS ---
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(d) { if(!d) return '—'; return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+function fmtTs(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+function pilStatus(s) {
+  const m={Open:'pill-open','In Progress':'pill-progress',Resolved:'pill-resolved',Archived:'pill-archived'};
+  return `<span class="pill ${m[s]||'pill-open'}">${s}</span>`;
+}
+function pilPri(p) { return `<span class="pill pill-${p.toLowerCase()}">${p}</span>`; }
+function allTags() {
+  const tags = new Set(DEFAULT_TAGS);
+  tickets.forEach(t=>(t.tags||[]).forEach(g=>tags.add(g)));
+  return [...tags];
+}
+function getTickets() {
+  let t = tickets;
+  if (!showArchived) t = t.filter(x=>x.status!=='Archived');
+  if (filterStatus) t = t.filter(x=>x.status===filterStatus);
+  if (filterPriority) t = t.filter(x=>x.priority===filterPriority);
+  if (filterTag) t = t.filter(x=>x.tags&&x.tags.includes(filterTag));
+  return t;
+}
+
+// --- RENDER ---
+function render() {
+  const app = document.getElementById('app');
+  const visible = getTickets();
+  const total = tickets.filter(x=>x.status!=='Archived').length;
+  const p1 = tickets.filter(x=>x.priority==='P1'&&x.status!=='Archived'&&x.status!=='Resolved').length;
+  const inprog = tickets.filter(x=>x.status==='In Progress').length;
+  const resolved = tickets.filter(x=>x.status==='Resolved').length;
+
+  let html = `<div class="topbar">
+    <div class="logo"><span>[</span>TICKR<span>]</span></div>
+    <div class="stats" style="margin:0;flex:1;min-width:280px">
+      <div class="stat"><div class="stat-label">OPEN</div><div class="stat-val">${total}</div></div>
+      <div class="stat"><div class="stat-label">P1 CRITICAL</div><div class="stat-val p1c">${p1}</div></div>
+      <div class="stat"><div class="stat-label">IN PROGRESS</div><div class="stat-val p3c">${inprog}</div></div>
+      <div class="stat"><div class="stat-label">RESOLVED</div><div class="stat-val p4c">${resolved}</div></div>
+    </div>
+    <div class="tabs">
+      <button class="tab ${view==='list'?'active':''}" onclick="setView('list')">LIST</button>
+      <button class="tab ${view==='kanban'?'active':''}" onclick="setView('kanban')">KANBAN</button>
+    </div>
+    <button class="btn-new" onclick="openNew()">+ NEW TICKET</button>
+  </div>`;
+
+  html += `<div class="filters">
+    <span class="filter-label">FILTER:</span>
+    <select onchange="filterStatus=this.value;render()">
+      <option value="">All statuses</option>
+      ${STATUSES.map(s=>`<option value="${s}" ${filterStatus===s?'selected':''}>${s}</option>`).join('')}
+    </select>
+    <select onchange="filterPriority=this.value;render()">
+      <option value="">All priorities</option>
+      ${PRIORITIES.map(p=>`<option value="${p}" ${filterPriority===p?'selected':''}>${p}</option>`).join('')}
+    </select>
+    <select onchange="filterTag=this.value;render()">
+      <option value="">All tags</option>
+      ${allTags().map(t=>`<option value="${t}" ${filterTag===t?'selected':''}>${t}</option>`).join('')}
+    </select>
+    <button class="arch-toggle" onclick="showArchived=!showArchived;render()">${showArchived?'Hide':'Show'} archived</button>
+  </div>`;
+
+  html += view==='list' ? renderList(visible) : renderKanban();
+
+  if (modal==='new'||modal==='edit') html += renderFormModal();
+  if (modal==='detail'&&detailTicket) html += renderDetailModal();
+
+  app.innerHTML = html;
+}
+
+function renderList(t) {
+  if (!t.length) return `<div class="loading">No tickets found. Click + NEW TICKET to get started.</div>`;
+  return `<div>
+    <div class="list-header"><div>ID</div><div>TITLE</div><div>PRIORITY</div><div>STATUS</div><div>DUE</div><div>EST</div><div>TAGS</div><div></div></div>
+    ${t.map(tk=>`
+    <div class="list-row ${tk.status==='Archived'?'archived-row':''}" onclick="openDetail('${tk._id}')">
+      <div class="ticket-id">${esc(tk.ticketId)}</div>
+      <div class="ticket-title">${esc(tk.title)}</div>
+      <div>${pilPri(tk.priority)}</div>
+      <div>${pilStatus(tk.status)}</div>
+      <div style="font-size:11px;color:var(--text2)">${fmtDate(tk.due)}</div>
+      <div style="font-size:11px;color:var(--text2)">${tk.estimate?tk.estimate+'h':'—'}</div>
+      <div class="ticket-tags">${(tk.tags||[]).slice(0,2).map(g=>`<span class="tag-pill">${g}</span>`).join('')}</div>
+      <div class="row-action" onclick="event.stopPropagation()">
+        <button class="icon-btn" onclick="openEdit('${tk._id}')">✎</button>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function renderKanban() {
+  const cols = showArchived ? STATUSES : STATUSES.filter(c=>c!=='Archived');
+  let html = `<div class="kanban" style="grid-template-columns:repeat(${cols.length},minmax(0,1fr))">`;
+  cols.forEach(col=>{
+    let ct = tickets.filter(t=>t.status===col);
+    if (filterPriority) ct=ct.filter(t=>t.priority===filterPriority);
+    if (filterTag) ct=ct.filter(t=>t.tags&&t.tags.includes(filterTag));
+    html+=`<div><div class="col-header"><span>${col.toUpperCase()}</span><span class="col-count">${ct.length}</span></div>`;
+    if (!ct.length) html+=`<div class="empty-col">empty</div>`;
+    ct.forEach(t=>{
+      html+=`<div class="k-card" onclick="openDetail('${t._id}')">
+        <div class="k-card-id">${esc(t.ticketId)}</div>
+        <div class="k-card-title">${esc(t.title)}</div>
+        <div class="k-card-meta">
+          ${pilPri(t.priority)}
+          ${t.due?`<span style="font-size:10px;color:var(--text3)">${fmtDate(t.due)}</span>`:''}
+          ${(t.tags||[]).slice(0,1).map(g=>`<span class="tag-pill">${g}</span>`).join('')}
+        </div>
+      </div>`;
+    });
+    html+=`</div>`;
+  });
+  return html+'</div>';
+}
+
+function renderFormModal() {
+  const t = editTicket||{};
+  const isEdit = modal==='edit';
+  return `<div class="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title">
+      <span>${isEdit?'EDIT: '+t.ticketId:'NEW TICKET'}</span>
+      <button class="icon-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="field-group">
+      <div class="field-label">TITLE *</div>
+      <input id="f-title" type="text" value="${esc(t.title||'')}" placeholder="Short description">
+    </div>
+    <div class="field-group">
+      <div class="field-label">DESCRIPTION</div>
+      <textarea id="f-desc" placeholder="Details, context, steps...">${esc(t.description||'')}</textarea>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <div class="field-label">PRIORITY *</div>
+        <select id="f-priority">
+          ${PRIORITIES.map(p=>`<option value="${p}" ${(t.priority||'P3')===p?'selected':''}>${p} — ${p==='P1'?'Critical':p==='P2'?'High':p==='P3'?'Medium':'Low'}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field-group">
+        <div class="field-label">STATUS *</div>
+        <select id="f-status">
+          ${STATUSES.map(s=>`<option value="${s}" ${(t.status||'Open')===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <div class="field-label">DUE DATE</div>
+        <input id="f-due" type="date" value="${t.due||''}">
+      </div>
+      <div class="field-group">
+        <div class="field-label">ESTIMATE (hours)</div>
+        <input id="f-estimate" type="number" min="0" step="0.5" value="${t.estimate||''}" placeholder="e.g. 2">
+      </div>
+    </div>
+    <div class="field-group">
+      <div class="field-label">TAGS (comma-separated)</div>
+      <input id="f-tags" type="text" value="${esc((t.tags||[]).join(', '))}" placeholder="bug, feature, work...">
+    </div>
+    ${isEdit?`<div class="field-group">
+      <div class="field-label">ADD COMMENT</div>
+      <textarea id="f-comment" placeholder="Optional note..."></textarea>
+    </div>`:''}
+    <div class="btn-row">
+      ${isEdit?`<button class="btn-danger" onclick="archiveTicket('${t._id}','${t.status}')">${t.status==='Archived'?'Unarchive':'Archive'}</button>`:''}
+      <button class="btn-sec" onclick="closeModal()">Cancel</button>
+      <button class="btn-pri" onclick="${isEdit?`saveEdit('${t._id}')`:' saveNew()'}">${isEdit?'Save Changes':'Create Ticket'}</button>
+    </div>
+  </div></div>`;
+}
+
+function renderDetailModal() {
+  const t = detailTicket;
+  return `<div class="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-title">
+      <span>${t.ticketId}</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="icon-btn" onclick="openEdit('${t._id}')">✎</button>
+        <button class="icon-btn" onclick="closeModal()">✕</button>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div style="font-size:15px;font-weight:500;margin-bottom:8px">${esc(t.title)}</div>
+      ${t.description?`<div style="font-size:12px;color:var(--text2);line-height:1.6">${esc(t.description)}</div>`:''}
+    </div>
+    <div class="detail-section">
+      <div class="detail-row"><div class="detail-key">Priority</div><div>${pilPri(t.priority)}</div></div>
+      <div class="detail-row"><div class="detail-key">Status</div><div>${pilStatus(t.status)}</div></div>
+      <div class="detail-row"><div class="detail-key">Due date</div><div>${fmtDate(t.due)}</div></div>
+      <div class="detail-row"><div class="detail-key">Estimate</div><div>${t.estimate?t.estimate+' hrs':'—'}</div></div>
+      <div class="detail-row"><div class="detail-key">Tags</div><div style="display:flex;gap:4px;flex-wrap:wrap">${(t.tags||[]).map(g=>`<span class="tag-pill">${g}</span>`).join('')||'—'}</div></div>
+      <div class="detail-row"><div class="detail-key">Opened</div><div style="font-size:11px">${fmtTs(t.createdAt)}</div></div>
+      ${t.updatedAt?`<div class="detail-row"><div class="detail-key">Updated</div><div style="font-size:11px">${fmtTs(t.updatedAt)}</div></div>`:''}
+    </div>
+    <div>
+      <div class="field-label" style="margin-bottom:8px">COMMENTS / NOTES</div>
+      ${(t.comments||[]).length?(t.comments.map(c=>`<div class="comment-item">${esc(c.text)}<div class="comment-ts">${fmtTs(c.ts)}</div></div>`).join('')):`<div style="font-size:11px;color:var(--text3);margin-bottom:8px">No comments yet.</div>`}
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <input id="inline-comment" type="text" placeholder="Add a comment...">
+        <button class="btn-sec" style="white-space:nowrap;width:auto" onclick="addComment('${t._id}')">Add</button>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-danger" onclick="archiveTicket('${t._id}','${t.status}')">${t.status==='Archived'?'Unarchive':'Archive'}</button>
+      <button class="btn-sec" onclick="closeModal()">Close</button>
+    </div>
+  </div></div>`;
+}
+
+// --- ACTIONS ---
+function setView(v) { view=v; render(); }
+function closeModal() { modal=null; editTicket=null; detailTicket=null; render(); }
+function openNew() { modal='new'; editTicket=null; render(); }
+function openEdit(id) { editTicket=tickets.find(t=>t._id===id); modal='edit'; detailTicket=null; render(); }
+function openDetail(id) { detailTicket=tickets.find(t=>t._id===id); modal='detail'; render(); }
+
+function readForm() {
+  return {
+    title: document.getElementById('f-title').value.trim(),
+    description: document.getElementById('f-desc').value.trim(),
+    priority: document.getElementById('f-priority').value,
+    status: document.getElementById('f-status').value,
+    due: document.getElementById('f-due').value||null,
+    estimate: parseFloat(document.getElementById('f-estimate').value)||null,
+    tags: document.getElementById('f-tags').value.split(',').map(x=>x.trim()).filter(Boolean)
+  };
+}
+
+async function saveNew() {
+  const f = readForm();
+  if (!f.title) { toast('Title is required', true); return; }
+  f.ticketId = newTicketId();
+  try {
+    const created = await apiFetch('/api/tickets', 'POST', f);
+    tickets.unshift(created);
+    closeModal();
+    toast('Ticket created');
+  } catch(e) { toast('Error creating ticket', true); }
+}
+
+async function saveEdit(id) {
+  const f = readForm();
+  if (!f.title) { toast('Title is required', true); return; }
+  const commentText = document.getElementById('f-comment')?.value.trim();
+  const existing = tickets.find(t=>t._id===id);
+  const comments = [...(existing.comments||[])];
+  if (commentText) comments.push({text:commentText, ts:Date.now()});
+  const updates = {...f, comments};
+  try {
+    await apiFetch(`/api/tickets/${id}`, 'PATCH', updates);
+    const idx = tickets.findIndex(t=>t._id===id);
+    tickets[idx] = {...existing, ...updates, updatedAt: Date.now()};
+    closeModal();
+    toast('Ticket updated');
+  } catch(e) { toast('Error updating ticket', true); }
+}
+
+async function addComment(id) {
+  const txt = document.getElementById('inline-comment').value.trim();
+  if (!txt) return;
+  const existing = tickets.find(t=>t._id===id);
+  const comments = [...(existing.comments||[]), {text:txt, ts:Date.now()}];
+  try {
+    await apiFetch(`/api/tickets/${id}`, 'PATCH', {comments});
+    const idx = tickets.findIndex(t=>t._id===id);
+    tickets[idx] = {...existing, comments, updatedAt: Date.now()};
+    detailTicket = tickets[idx];
+    render();
+    toast('Comment added');
+  } catch(e) { toast('Error adding comment', true); }
+}
+
+async function archiveTicket(id, currentStatus) {
+  const newStatus = currentStatus==='Archived' ? 'Open' : 'Archived';
+  try {
+    await apiFetch(`/api/tickets/${id}`, 'PATCH', {status: newStatus});
+    const idx = tickets.findIndex(t=>t._id===id);
+    tickets[idx] = {...tickets[idx], status: newStatus, updatedAt: Date.now()};
+    closeModal();
+    toast(newStatus==='Archived' ? 'Ticket archived' : 'Ticket restored');
+  } catch(e) { toast('Error updating ticket', true); }
+}
+</script>
+</body>
+</html>

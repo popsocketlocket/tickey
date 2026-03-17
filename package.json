@@ -1,0 +1,8 @@
+{
+  "name": "tickr",
+  "version": "1.0.0",
+  "description": "Personal IT ticket tracker",
+  "dependencies": {
+    "mongodb": "^6.0.0"
+  }
+}
